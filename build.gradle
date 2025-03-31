@@ -19,6 +19,8 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     implementation 'org.jsoup:jsoup:1.19.1'
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+
 }
 
 test {

@@ -6,44 +6,57 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 
+import static java.lang.System.in;
 
-public class Main {
-    private static final int MAX_DEPTH = 2;
+
+public class WebCrowler {
+    private static final int MAX_DEPTH = 2; // maximum depth to crawl, can be changed
+    private static FileWriter FILE;
 
     public static void main(String[] args) {
 
-        //Scanner userInput = new Scanner(in);
+        Scanner userInput = new Scanner(in);
 
-        //String params = userInput.nextLine();
+        System.out.println("Enter URL: \n");
+        String url = userInput.nextLine();
+        System.out.println("Enter depth: \n");
+        int depth = userInput.nextInt();
 
-        int numberOfHeadings = 6;
 
-        //String url = params;
 
-        String url = "https://example.com/";
-
+        int numberOfHeadings = 6; // possible headings are <h1>, <h2>, <h3>, <h4>, <h5>, <h6>
 
         try {
-            ArrayList<String> visitedLinks = new ArrayList<>();
+            ArrayList<String> visitedLinks = new ArrayList<>(); // cache to store visited links
 
-            startFetch(normalizeUrl(url), 0, numberOfHeadings, visitedLinks);
+            FILE = new FileWriter("report.md");
+
+            startFetch(normalizeUrl(url), 0, visitedLinks);
+
+            FILE.close();
 
 
         } catch (Exception e){
+
             System.out.println("[ERROR]: " + e.getMessage());
         }
     }
 
-    public static void startFetch(String url, int depth, int numHeadings, ArrayList<String> visited) throws IOException {
+    public static void startFetch(String url, int depth, ArrayList<String> visited) throws IOException {
         if(depth >= MAX_DEPTH){
             return;
         }
 
+
         if(visited.contains(normalizeUrl(url))){
+
+            FILE.write("[VISITED]: " + url + "\n");
             System.out.println("[VISITED]: " + url);
             return;
         }
@@ -51,25 +64,33 @@ public class Main {
 
         visited.add(normalizeUrl(url));
         ArrayList<String> links = getLinks(url);
+
+
         System.out.println("input: " + url );
         System.out.println("<br>depth: " + depth);
+        FILE.write("input: " + url + "\n");
+        FILE.write("<br>depth: " + depth + "\n");
 
-        for(String heading : getHeadings(url, numHeadings)){
+
+
+        for(String heading : getHeadings(url)){
             System.out.println(heading);
+
+            FILE.write(heading + "\n");
         }
 
         for(String link : links){
-            startFetch(link, depth, numHeadings, visited);
+            startFetch(link, depth, visited);
         }
     }
 
-
-
-    public static ArrayList<String> getHeadings(String url, int numHeadings) throws IOException {
+    public static ArrayList<String> getHeadings(String url) throws IOException {
 
         Document document = Jsoup.connect(url).get();
 
         ArrayList<String> headingsList = new ArrayList<>();
+
+        int numHeadings = 6;
 
         for(int i = 1; i<=numHeadings; i++){
 
@@ -100,14 +121,29 @@ public class Main {
 
         for(Element link : links){
             linksList.add(link.attr("abs:href"));
-
         }
         return linksList;
     }
 
-    private static String normalizeUrl(String url) {
+
+    public static String urlToSecure(String url){
+        if (url.startsWith("http://")) {
+            url = "https://" + url.substring(7);
+        }
+        return url;
+    }
+
+    public static String normalizeUrl(String url) {
+
+        url = urlToSecure(url);
+
         if (url.endsWith("/")) {
             url = url.substring(0, url.length() - 1);
+        }
+        if (url.contains("://www.")) {
+            url = url.replace("://www.", "://");
+        } else if (url.startsWith("www.")) {
+            url = url.replace("www.", "");
         }
         int fragmentIndex = url.indexOf("#");
         if (fragmentIndex != -1) {
