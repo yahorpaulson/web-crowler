@@ -1,18 +1,16 @@
 package org.example;
-
+/**
+ * Imports
+ * */
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
-
 import static java.lang.System.in;
 
 
