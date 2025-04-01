@@ -15,9 +15,9 @@ import java.util.Scanner;
 import static java.lang.System.in;
 
 
-public class WebCrowler {
-    private static final int MAX_DEPTH = 2; // maximum depth to crawl, can be changed
+public class WebCrawler {
     private static FileWriter FILE;
+    static int MAX_DEPTH;
 
     public static void main(String[] args) {
 
@@ -26,11 +26,11 @@ public class WebCrowler {
         System.out.println("Enter URL: \n");
         String url = userInput.nextLine();
         System.out.println("Enter depth: \n");
-        int depth = userInput.nextInt();
+        MAX_DEPTH = userInput.nextInt();
 
 
 
-        int numberOfHeadings = 6; // possible headings are <h1>, <h2>, <h3>, <h4>, <h5>, <h6>
+
 
         try {
             ArrayList<String> visitedLinks = new ArrayList<>(); // cache to store visited links
@@ -53,13 +53,6 @@ public class WebCrowler {
             return;
         }
 
-
-        if(visited.contains(normalizeUrl(url))){
-
-            FILE.write("[VISITED]: " + url + "\n");
-            System.out.println("[VISITED]: " + url);
-            return;
-        }
         depth++;
 
         visited.add(normalizeUrl(url));
@@ -68,16 +61,18 @@ public class WebCrowler {
 
         System.out.println("input: " + url );
         System.out.println("<br>depth: " + depth);
-        FILE.write("input: " + url + "\n");
+        FILE.write("input: " + "<a>" +url+ "</a>" +"\n");
         FILE.write("<br>depth: " + depth + "\n");
 
 
+        for(int i = 1; i<=getHeadings(url).size(); i++){
+            System.out.println(getHeadings(url).get(i-1));
 
-        for(String heading : getHeadings(url)){
-            System.out.println(heading);
 
-            FILE.write(heading + "\n");
+            FILE.write(getHeadings(url).get(i-1) + "\n");
         }
+
+
 
         for(String link : links){
             startFetch(link, depth, visited);
@@ -85,24 +80,41 @@ public class WebCrowler {
     }
 
     public static ArrayList<String> getHeadings(String url) throws IOException {
-
         Document document = Jsoup.connect(url).get();
-
         ArrayList<String> headingsList = new ArrayList<>();
 
-        int numHeadings = 6;
+        int[] headingCounters = new int[6];
 
-        for(int i = 1; i<=numHeadings; i++){
+        for (int level = 1; level <= 6; level++) {
+            Elements headings = document.select("h" + level);
 
-            Elements headings = document.select("h" + i);
+            for (Element heading : headings) {
+                headingCounters[level - 1]++;
 
-            for(Element heading : headings){
-                headingsList.add(getHashTag(i) + " ---> "+ heading.text());
+
+                //reset all the others
+                for (int i = level; i < 6; i++) {
+                    headingCounters[i] = 0;
+                }
+
+                StringBuilder numbering = new StringBuilder();
+
+
+                for (int i = 0; i < level; i++) {
+                    if (headingCounters[i] == 0) continue;
+                    if (numbering.length() > 0) numbering.append(".");
+                    numbering.append(headingCounters[i]);
+                }
+
+                String markdownHeading = getHashTag(level) + " " + heading.text() + " " + numbering + "";
+                headingsList.add(markdownHeading);
             }
         }
 
         return headingsList;
     }
+
+
 
     public static String getHashTag(int headingLevel){
         StringBuilder hashTags = new StringBuilder();
@@ -126,6 +138,8 @@ public class WebCrowler {
     }
 
 
+
+
     public static String urlToSecure(String url){
         if (url.startsWith("http://")) {
             url = "https://" + url.substring(7);
@@ -134,6 +148,10 @@ public class WebCrowler {
     }
 
     public static String normalizeUrl(String url) {
+
+        if(!url.startsWith("http")){
+            url = "https://"+url;
+        }
 
         url = urlToSecure(url);
 
