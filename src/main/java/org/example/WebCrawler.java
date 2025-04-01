@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -78,8 +79,50 @@ public class WebCrawler {
             startFetch(link, depth, visited);
         }
     }
+    private static Document fetchDocument(String url) throws IOException {
+        return Jsoup.connect(url).get();
+    }
 
     public static ArrayList<String> getHeadings(String url) throws IOException {
+        Document document = fetchDocument(url);
+        List<HeadingData> headings = extractHeadings(document);
+
+        ArrayList<String> result = new ArrayList<>();
+        for (HeadingData h : headings) {
+            result.add(formatHeading(h));
+        }
+        return result;
+    }
+    private static String formatHeading(HeadingData heading) {
+        return getHashTag(heading.level) + " " + heading.text + " " + heading.numbering;
+    }
+
+    private static List<HeadingData> extractHeadings(Document doc) {
+        List<HeadingData> headingsList = new ArrayList<>();
+        int[] headingCounters = new int[6];
+
+        Elements allHeadings = doc.select("h1, h2, h3, h4, h5, h6");
+
+        for (Element heading : allHeadings) {
+            int level = Integer.parseInt(heading.tagName().substring(1));
+            headingCounters[level - 1]++;
+
+            for (int i = level; i < 6; i++) headingCounters[i] = 0;
+
+            StringBuilder numbering = new StringBuilder();
+            for (int i = 0; i < level; i++) {
+                if (headingCounters[i] == 0) continue;
+                if (numbering.length() > 0) numbering.append(".");
+                numbering.append(headingCounters[i]);
+            }
+
+            headingsList.add(new HeadingData(level, heading.text(), numbering.toString()));
+        }
+
+        return headingsList;
+    }
+
+    /*public static ArrayList<String> getHeadings(String url) throws IOException {
         Document document = Jsoup.connect(url).get();
         ArrayList<String> headingsList = new ArrayList<>();
 
@@ -112,7 +155,7 @@ public class WebCrawler {
         }
 
         return headingsList;
-    }
+    }*/
 
 
 
