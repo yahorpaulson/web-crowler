@@ -57,7 +57,22 @@ public class WebCrawlerTest {
             assertTrue(links.contains("https://example.com/relative/page2"));
         }
     }
+    @Test
+    public void testGetLinksEmptyPage() throws IOException {
+        String fakeHtml = "<html><body>Empty html</body></html>";
 
+        Document fakeDoc = Jsoup.parse(fakeHtml, "https://example.com");
+
+        try (MockedStatic<Jsoup> jsoupMocked = mockStatic(Jsoup.class)) {
+            Connection connectionMock = mock(Connection.class);
+            when(connectionMock.get()).thenReturn(fakeDoc);
+            jsoupMocked.when(() -> Jsoup.connect("https://example.com")).thenReturn(connectionMock);
+
+            ArrayList<String> links = getLinks("https://example.com");
+
+            assertTrue(links.isEmpty());
+        }
+    }
 
 
 }

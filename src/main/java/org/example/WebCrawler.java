@@ -28,9 +28,6 @@ public class WebCrawler {
         MAX_DEPTH = userInput.nextInt();
 
 
-
-
-
         try {
             ArrayList<String> visitedLinks = new ArrayList<>(); // cache to store visited links
 
@@ -54,24 +51,19 @@ public class WebCrawler {
 
         depth++;
 
+        if (visited.contains(normalizeUrl(url))) {
+            return;
+        }
+
         visited.add(normalizeUrl(url));
         ArrayList<String> links = getLinks(url);
 
-
-        System.out.println("input: " + url );
-        System.out.println("<br>depth: " + depth);
         FILE.write("input: " + "<a>" +url+ "</a>" +"\n");
         FILE.write("<br>depth: " + depth + "\n");
 
-
         for(int i = 1; i<=getHeadings(url).size(); i++){
-            System.out.println(getHeadings(url).get(i-1));
-
-
             FILE.write(getHeadings(url).get(i-1) + "\n");
         }
-
-
 
         for(String link : links){
             startFetch(link, depth, visited);
@@ -95,7 +87,7 @@ public class WebCrawler {
         return getHashTag(heading.level) + " " + heading.text + " " + heading.numbering;
     }
 
-    private static List<HeadingData> extractHeadings(Document doc) {
+    public static List<HeadingData> extractHeadings(Document doc) {
         List<HeadingData> headingsList = new ArrayList<>();
         int[] headingCounters = new int[6];
 
@@ -119,42 +111,6 @@ public class WebCrawler {
 
         return headingsList;
     }
-
-    /*public static ArrayList<String> getHeadings(String url) throws IOException {
-        Document document = Jsoup.connect(url).get();
-        ArrayList<String> headingsList = new ArrayList<>();
-
-        int[] headingCounters = new int[6];
-
-        for (int level = 1; level <= 6; level++) {
-            Elements headings = document.select("h" + level);
-
-            for (Element heading : headings) {
-                headingCounters[level - 1]++;
-
-
-                //reset all the others
-                for (int i = level; i < 6; i++) {
-                    headingCounters[i] = 0;
-                }
-
-                StringBuilder numbering = new StringBuilder();
-
-
-                for (int i = 0; i < level; i++) {
-                    if (headingCounters[i] == 0) continue;
-                    if (numbering.length() > 0) numbering.append(".");
-                    numbering.append(headingCounters[i]);
-                }
-
-                String markdownHeading = getHashTag(level) + " " + heading.text() + " " + numbering + "";
-                headingsList.add(markdownHeading);
-            }
-        }
-
-        return headingsList;
-    }*/
-
 
 
     public static String getHashTag(int headingLevel){
@@ -210,4 +166,6 @@ public class WebCrawler {
         }
         return url.toLowerCase();
     }
+
+
 }
