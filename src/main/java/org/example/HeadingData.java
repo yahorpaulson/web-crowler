@@ -1,13 +1,13 @@
 package org.example;
 
 public class HeadingData {
-    int level;
-    String text;
-    String numbering;
+    public final int level;
+    public final String text;
+    public final String numbering;
 
-    HeadingData(int level, String text, String numbering) {
+    public HeadingData(int level, String text, String numbering) {
         this.level = level;
-        this.text = text;
-        this.numbering = numbering;
+        this.text = text != null ? text : "";
+        this.numbering = numbering != null ? numbering : "";
     }
 }
