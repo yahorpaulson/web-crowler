@@ -73,6 +73,15 @@ public class WebCrawler {
         return Jsoup.connect(url).get();
     }
 
+    public static List<String> getHeadings(Document doc){
+        List<HeadingData> headings = extractHeadings(doc);
+        List<String> result = new ArrayList<>();
+        for (HeadingData h : headings) {
+            result.add(formatHeading(h));
+        }
+        return result;
+    }
+
     public static ArrayList<String> getHeadings(String url) throws IOException {
         Document document = fetchDocument(url);
         List<HeadingData> headings = extractHeadings(document);
