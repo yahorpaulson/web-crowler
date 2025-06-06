@@ -9,39 +9,72 @@ import org.jsoup.select.Elements;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static java.lang.System.in;
 
 
 public class WebCrawler {
+
+    private static final int THREAD_POOL_SIZE = 10;
+
+    private ExecutorService executor;
+    private ArrayList<String> visited;
     private static FileWriter FILE;
     static int MAX_DEPTH;
 
+
+
     public static void main(String[] args) {
-
-        Scanner userInput = new Scanner(in);
-
-        System.out.println("Enter URL: \n");
-        String url = userInput.nextLine();
-        System.out.println("Enter depth: \n");
-        MAX_DEPTH = userInput.nextInt();
-
 
         try {
             ArrayList<String> visitedLinks = new ArrayList<>(); // cache to store visited links
 
-            FILE = new FileWriter("report.md");
-
-            startFetch(normalizeUrl(url), 0, visitedLinks);
-
-            FILE.close();
 
 
         } catch (Exception e){
 
             System.out.println("[ERROR]: " + e.getMessage());
         }
+    }
+
+
+    public void run(){
+        System.out.println("Web Crawler is running...");
+
+        try {
+
+            Scanner userInput = new Scanner(in);
+
+            System.out.println("Enter URL: \n");
+            String url = userInput.nextLine();
+            System.out.println("Enter depth: \n");
+            MAX_DEPTH = userInput.nextInt();
+
+            visited = (ArrayList<String>) Collections.synchronizedList(new ArrayList<String>()); // thread-safe list to store visited links
+            executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+
+            FILE = new FileWriter("report.md");
+            submitTask(normalizeUrl(url), 0);
+
+            executor.shutdown();
+            executor.awaitTermination(Long.MAX_VALUE, java.util.concurrent.TimeUnit.NANOSECONDS);
+            FILE.close();
+
+
+
+        } catch (Exception e) {
+            System.out.println("[ERROR]: " + e.getMessage());
+        }
+    }
+
+
+    public void submitTask(String url, int depth) {
+        executor.submit(new Task(url, depth, MAX_DEPTH, visited, FILE, this));
     }
 
     public static void startFetch(String url, int depth, ArrayList<String> visited) throws IOException {
@@ -123,12 +156,7 @@ public class WebCrawler {
 
 
     public static String getHashTag(int headingLevel){
-        StringBuilder hashTags = new StringBuilder();
-
-        for(int i = 0; i<headingLevel; i++){
-            hashTags.append("#");
-        }
-        return hashTags.toString();
+        return "#".repeat(Math.max(0, headingLevel));
     }
 
     public static ArrayList<String> getLinks(String url) throws IOException {
