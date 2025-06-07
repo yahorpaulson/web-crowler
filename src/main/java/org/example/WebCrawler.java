@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.System.in;
 
@@ -21,25 +22,16 @@ import static java.lang.System.in;
 public class WebCrawler {
 
     private static final int THREAD_POOL_SIZE = 10;
-
     private ExecutorService executor;
-    private ArrayList<String> visited;
+    private final AtomicInteger activeTasks = new AtomicInteger(0);
+
+    private List<String> visited;
     private static FileWriter FILE;
     static int MAX_DEPTH;
 
-
-
     public static void main(String[] args) {
 
-        try {
-            ArrayList<String> visitedLinks = new ArrayList<>(); // cache to store visited links
-
-
-
-        } catch (Exception e){
-
-            System.out.println("[ERROR]: " + e.getMessage());
-        }
+        new WebCrawler().run();
     }
 
 
@@ -55,17 +47,14 @@ public class WebCrawler {
             System.out.println("Enter depth: \n");
             MAX_DEPTH = userInput.nextInt();
 
-            visited = (ArrayList<String>) Collections.synchronizedList(new ArrayList<String>()); // thread-safe list to store visited links
+            visited = Collections.synchronizedList(new ArrayList<String>()); // visited links
             executor = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
 
             FILE = new FileWriter("report.md");
             submitTask(normalizeUrl(url), 0);
 
-            executor.shutdown();
             executor.awaitTermination(Long.MAX_VALUE, java.util.concurrent.TimeUnit.NANOSECONDS);
             FILE.close();
-
-
 
         } catch (Exception e) {
             System.out.println("[ERROR]: " + e.getMessage());
@@ -74,37 +63,23 @@ public class WebCrawler {
 
 
     public void submitTask(String url, int depth) {
-        executor.submit(new Task(url, depth, MAX_DEPTH, visited, FILE, this));
+
+        activeTasks.incrementAndGet();
+
+        executor.submit(() -> {
+            try{
+                new Task(url, depth, MAX_DEPTH, visited, FILE, this).run();
+            } finally {
+                if (activeTasks.decrementAndGet() == 0) {
+                    System.out.println("All tasks completed.");
+                    executor.shutdown();
+                }
+            }
+
+        });
     }
 
-    public static void startFetch(String url, int depth, ArrayList<String> visited) throws IOException {
-        if(depth >= MAX_DEPTH){
-            return;
-        }
 
-        depth++;
-
-        if (visited.contains(normalizeUrl(url))) {
-            return;
-        }
-
-        visited.add(normalizeUrl(url));
-        ArrayList<String> links = getLinks(url);
-
-        FILE.write("input: " + "<a>" +url+ "</a>" +"\n");
-        FILE.write("<br>depth: " + depth + "\n");
-
-        for(int i = 1; i<=getHeadings(url).size(); i++){
-            FILE.write(getHeadings(url).get(i-1) + "\n");
-        }
-
-        for(String link : links){
-            startFetch(link, depth, visited);
-        }
-    }
-    private static Document fetchDocument(String url) throws IOException {
-        return Jsoup.connect(url).get();
-    }
 
     public static List<String> getHeadings(Document doc){
         List<HeadingData> headings = extractHeadings(doc);
@@ -115,16 +90,6 @@ public class WebCrawler {
         return result;
     }
 
-    public static ArrayList<String> getHeadings(String url) throws IOException {
-        Document document = fetchDocument(url);
-        List<HeadingData> headings = extractHeadings(document);
-
-        ArrayList<String> result = new ArrayList<>();
-        for (HeadingData h : headings) {
-            result.add(formatHeading(h));
-        }
-        return result;
-    }
     private static String formatHeading(HeadingData heading) {
         return getHashTag(heading.level) + " " + heading.text + " " + heading.numbering;
     }
@@ -159,8 +124,8 @@ public class WebCrawler {
         return "#".repeat(Math.max(0, headingLevel));
     }
 
-    public static ArrayList<String> getLinks(String url) throws IOException {
-        Document document = Jsoup.connect(url).get();
+    public static ArrayList<String> getLinks(Document document) throws IOException {
+
         ArrayList<String> linksList = new ArrayList<>();
         Elements links = document.select("a[href]");
 

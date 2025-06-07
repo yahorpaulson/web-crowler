@@ -4,18 +4,18 @@ import org.jsoup.Jsoup;
 
 import org.jsoup.nodes.Document;
 import java.io.FileWriter;
-import java.util.ArrayList;
+import java.util.List;
 
 public class Task implements Runnable{
 
     private final String url;
     private final int depth;
     private final int maxDepth;
-    private final ArrayList<String> visitedLinks;
+    private final List<String> visitedLinks;
     private final FileWriter fileWriter;
     private final WebCrawler crawler;
 
-    public Task(String url, int depth, int maxDepth, ArrayList<String> visitedLinks, FileWriter fileWriter, WebCrawler crawler) {
+    public Task(String url, int depth, int maxDepth, List<String> visitedLinks, FileWriter fileWriter, WebCrawler crawler) {
         this.url = url;
         this.depth = depth;
         this.maxDepth = maxDepth;
@@ -48,9 +48,10 @@ public class Task implements Runnable{
                     for(String heading : crawler.getHeadings(doc)) {
                         fileWriter.write(heading + "\n");
                     }
-                    /*for(String link : crawler.getLinks(doc)) {
-                        // Create a new task for each link
-                    }*/
+                    for(String link : crawler.getLinks(doc)) {
+
+                        crawler.submitTask(link, depth + 1);
+                    }
                 } catch (Exception e) {
                     System.out.println("[ERROR]: " + e.getMessage());
                 }
@@ -60,12 +61,6 @@ public class Task implements Runnable{
 
         } catch (Exception e) {
             System.out.println("[ERROR]: " + e.getMessage());
-        } finally {
-            try {
-                fileWriter.close();
-            } catch (Exception e) {
-                System.out.println("[ERROR]: " + e.getMessage());
-            }
         }
     }
 }

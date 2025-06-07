@@ -50,7 +50,7 @@ public class WebCrawlerTest {
             when(connectionMock.get()).thenReturn(fakeDoc);
             jsoupMocked.when(() -> Jsoup.connect("https://example.com")).thenReturn(connectionMock);
 
-            ArrayList<String> links = getLinks("https://example.com");
+            ArrayList<String> links = getLinks(Document.createShell("https://example.com"));
 
             assertEquals(2, links.size());
             assertTrue(links.contains("https://example.com/page1"));
@@ -68,7 +68,7 @@ public class WebCrawlerTest {
             when(connectionMock.get()).thenReturn(fakeDoc);
             jsoupMocked.when(() -> Jsoup.connect("https://example.com")).thenReturn(connectionMock);
 
-            ArrayList<String> links = getLinks("https://example.com");
+            ArrayList<String> links = getLinks(Document.createShell("https://example.com"));
 
             assertTrue(links.isEmpty());
         }
