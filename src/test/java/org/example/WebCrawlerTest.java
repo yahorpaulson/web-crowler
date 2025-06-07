@@ -45,12 +45,14 @@ public class WebCrawlerTest {
         Document fakeDoc = Jsoup.parse(fakeHtml, "https://example.com");
 
 
+
         try (MockedStatic<Jsoup> jsoupMocked = mockStatic(Jsoup.class)) {
             Connection connectionMock = mock(Connection.class);
             when(connectionMock.get()).thenReturn(fakeDoc);
             jsoupMocked.when(() -> Jsoup.connect("https://example.com")).thenReturn(connectionMock);
 
-            ArrayList<String> links = getLinks(Document.createShell("https://example.com"));
+            ArrayList<String> links = getLinks(fakeDoc);
+
 
             assertEquals(2, links.size());
             assertTrue(links.contains("https://example.com/page1"));

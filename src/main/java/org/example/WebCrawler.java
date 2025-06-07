@@ -36,7 +36,6 @@ public class WebCrawler {
 
 
     public void run(){
-        System.out.println("Web Crawler is running...");
 
         try {
 
@@ -124,7 +123,8 @@ public class WebCrawler {
         return "#".repeat(Math.max(0, headingLevel));
     }
 
-    public static ArrayList<String> getLinks(Document document) throws IOException {
+    public static ArrayList<String> getLinks(Document document) {
+        System.out.println(document.outerHtml());
 
         ArrayList<String> linksList = new ArrayList<>();
         Elements links = document.select("a[href]");
