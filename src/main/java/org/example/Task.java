@@ -57,7 +57,7 @@ public class Task implements Runnable{
                 }
             }
 
-            System.out.println("Task is running in a separate thread.");
+            System.out.println("Thread " + Thread.currentThread().getName() + " processed URL: " + url + " at depth: " + depth + "\n");
 
         } catch (Exception e) {
             System.out.println("[ERROR]: " + e.getMessage());

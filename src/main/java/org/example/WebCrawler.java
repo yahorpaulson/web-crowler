@@ -124,7 +124,7 @@ public class WebCrawler {
     }
 
     public static ArrayList<String> getLinks(Document document) {
-        System.out.println(document.outerHtml());
+
 
         ArrayList<String> linksList = new ArrayList<>();
         Elements links = document.select("a[href]");
