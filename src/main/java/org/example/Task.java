@@ -15,6 +15,7 @@ public class Task implements Runnable{
     private final FileWriter fileWriter;
     private final WebCrawler crawler;
 
+
     public Task(String url, int depth, int maxDepth, List<String> visitedLinks, FileWriter fileWriter, WebCrawler crawler) {
         this.url = url;
         this.depth = depth;
@@ -22,13 +23,14 @@ public class Task implements Runnable{
         this.visitedLinks = visitedLinks;
         this.fileWriter = fileWriter;
         this.crawler = crawler;
+
     }
 
     @Override
     public void run() {
 
         try{
-            String normalizedUrl = WebCrawler.normalizeUrl(url);
+            String normalizedUrl = WebCrawlerUtils.normalizeUrl(url);
 
             synchronized (visitedLinks) {
                 if (visitedLinks.contains(normalizedUrl)) {
@@ -45,10 +47,10 @@ public class Task implements Runnable{
                 try {
                     fileWriter.write("input: " + "<a>" +url+ "</a>" +"\n");
                     fileWriter.write("<br>depth: " + depth + "\n");
-                    for(String heading : crawler.getHeadings(doc)) {
+                    for(String heading : WebCrawlerUtils.getHeadings(doc)) {
                         fileWriter.write(heading + "\n");
                     }
-                    for(String link : crawler.getLinks(doc)) {
+                    for(String link : WebCrawlerUtils.getLinks(doc)) {
 
                         crawler.submitTask(link, depth + 1);
                     }
