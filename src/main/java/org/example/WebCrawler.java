@@ -147,6 +147,9 @@ public class WebCrawler {
     }
 
     public static String normalizeUrl(String url) {
+        if (url == null || url.isEmpty()) {
+            throw new IllegalArgumentException("URL cannot be null or empty");
+        }
 
         if(!url.startsWith("http")){
             url = "https://"+url;
